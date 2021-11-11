@@ -132,43 +132,103 @@ export class Assignment2 extends Base_Scene {
         });
     }
 
-    draw_box(context, program_state, model_transform) {
+    draw_box(context, program_state, model_transform, color1) {
         // TODO:  Helper function for requirement 3 (see hint).
         //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
         // Hint:  You can add more parameters for this function, like the desired color, index of the box, etc.
 
         const t = this.t = program_state.animation_time / 1000
-        for (let i = 0; i < 8 ; i++)
+
+        if(this.outline)
         {
-            if(this.outline)
-            {
-               this.shapes.outline.draw(context, program_state, model_transform, this.white, "LINES");
-            }
-            else
-            {
-                this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:this.colorArr[i]}));
-            }
-            //model_transform = model_transform.times(Mat4.translation(0, 2, 0));
-             if (!this.hover)
-            {
-                 var r = .025*Math.PI + .025*Math.PI*Math.sin(Math.PI*t);
-            }
-            else
-            {
-                var r = .05*Math.PI;
-            }
-
-           
-
-            model_transform   = model_transform.times( Mat4.translation( -1, 1, 0) )
-                                                 .times( Mat4.rotation( r,0, 0, 1 ) ) 
-                                                 .times( Mat4.translation(1, 1, 0) );
-                                             
-                                             
-                                             //.times( Mat4.scale([ 1, 1.5, 1 ]) );
+           this.shapes.outline.draw(context, program_state, model_transform, this.white, "LINES");
         }
-       
+        else
+        {
+            this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:color1}));
+        }
+        //model_transform = model_transform.times(Mat4.translation(0, 2, 0));
+        var r = 0;
+
+        model_transform   = model_transform.times( Mat4.translation( -1, 1, 0) )
+                                             .times( Mat4.rotation( r,0, 0, 1 ) ) 
+                                             .times( Mat4.translation(1, 1, 0) );
+
+
+                                         //.times( Mat4.scale([ 1, 1.5, 1 ]) );
+
+
         
+        return model_transform;
+    }
+
+    draw_room(context, program_state, model_transform) {
+        // TODO:  Helper function for requirement 3 (see hint).
+        //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
+        // Hint:  You can add more parameters for this function, like the desired color, index of the box, etc.
+
+        const t = this.t = program_state.animation_time / 1000
+
+        let col1 = hex_color("#ff0000");
+        let col2 = hex_color("#ffffff");
+        
+        model_transform = model_transform.times(Mat4.scale(50,1,50));
+
+        model_transform = this.draw_box(context, program_state, model_transform, col2);
+
+        let model_transform2 = Mat4.identity();
+
+        model_transform2 = model_transform2.times(Mat4.translation(50,25,0))
+                                        .times(Mat4.scale(1,25,50));
+
+        model_transform2 = this.draw_box(context, program_state, model_transform2, col2);
+
+        let model_transform3 = Mat4.identity();
+
+        model_transform3 = model_transform3.times(Mat4.translation(-50,25,0))
+                                        .times(Mat4.scale(1,25,50));
+
+        model_transform3 = this.draw_box(context, program_state, model_transform3, col2);
+
+        let model_transform4 = Mat4.identity();
+
+        model_transform4 = model_transform4.times(Mat4.translation(0,25,-50))
+                                        .times(Mat4.scale(50,25,1));
+
+        model_transform4 = this.draw_box(context, program_state, model_transform4, col2);
+
+        let model_transform5 = Mat4.identity();
+
+        model_transform5 = model_transform5.times(Mat4.translation(0,25,50))
+                                        .times(Mat4.scale(50,25,1));
+
+        model_transform5 = this.draw_box(context, program_state, model_transform5, col2);
+
+        let pedestal = Mat4.identity();
+
+        pedestal = pedestal.times(Mat4.translation(0,0,45))
+                                        .times(Mat4.scale(1,10,1));
+
+        pedestal = this.draw_box(context, program_state, pedestal, col1);
+        
+        let guard_1 = Mat4.identity();
+
+        guard_1 = guard_1.times(Mat4.translation(45,5,0))
+                        .times(Mat4.translation(0,0,20*Math.sin(Math.PI*t)))
+                        .times(Mat4.scale(3,3,3));
+
+        guard_1 = this.draw_box(context, program_state, guard_1, col1);
+
+        guard_1 = guard_1.times(Mat4.translation(0,2.5,0));
+
+        let guard_2 = Mat4.identity();
+
+        guard_2 = guard_2.times(Mat4.translation(-45,5,0))
+                        .times(Mat4.translation(0,0,20*Math.sin(Math.PI*t)))
+                        .times(Mat4.scale(3,3,3));
+
+        guard_2 = this.draw_box(context, program_state, guard_2, col1);
+
         return model_transform;
     }
 
@@ -180,6 +240,6 @@ export class Assignment2 extends Base_Scene {
         // Example for drawing a cube, you can remove this line if needed
         //this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:blue}));
         // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
-         model_transform = this.draw_box(context, program_state, model_transform);
+         model_transform = this.draw_room(context, program_state, model_transform);
     }
 }
