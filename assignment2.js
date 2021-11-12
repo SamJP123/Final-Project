@@ -44,14 +44,6 @@ class Cube_Outline extends Shape {
     }
 }
 
-class Cube_Single_Strip extends Shape {
-    constructor() {
-        super("position", "normal");
-        // TODO (Requirement 6)
-    }
-}
-
-
 class Base_Scene extends Scene {
     /**
      *  **Base_scene** is a Scene that can be added to any display canvas.
@@ -71,6 +63,7 @@ class Base_Scene extends Scene {
         this.shapes = {
             'cube': new Cube(),
             'outline': new Cube_Outline(),
+            'sphere': new defs.Subdivision_Sphere(4),
         };
 
         // *** Materials
@@ -90,14 +83,14 @@ class Base_Scene extends Scene {
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
-            program_state.set_camera(Mat4.translation(5, -10, -30));
+            program_state.set_camera(Mat4.translation(0, -10, -47));
         }
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
 
         // *** Lights: *** Values of vector or point lights.
-        const light_position = vec4(0, 5, 5, 1);
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+        const light_position1 = vec4(0, 20, 5, 1);
+        program_state.lights = [new Light(light_position1, color(1, 1, 1, 1), 1000)];
     }
 }
 
@@ -153,11 +146,6 @@ export class Assignment2 extends Base_Scene {
         model_transform   = model_transform.times( Mat4.translation( -1, 1, 0) )
                                              .times( Mat4.rotation( r,0, 0, 1 ) ) 
                                              .times( Mat4.translation(1, 1, 0) );
-
-
-                                         //.times( Mat4.scale([ 1, 1.5, 1 ]) );
-
-
         
         return model_transform;
     }
@@ -171,7 +159,9 @@ export class Assignment2 extends Base_Scene {
 
         let col1 = hex_color("#ff0000");
         let col2 = hex_color("#ffffff");
+        let col3 = hex_color("#ffd700");
         
+        //Walls and floor
         model_transform = model_transform.times(Mat4.scale(50,1,50));
 
         model_transform = this.draw_box(context, program_state, model_transform, col2);
@@ -204,13 +194,24 @@ export class Assignment2 extends Base_Scene {
 
         model_transform5 = this.draw_box(context, program_state, model_transform5, col2);
 
+
+        //Pedestal and treasure
         let pedestal = Mat4.identity();
 
-        pedestal = pedestal.times(Mat4.translation(0,0,45))
-                                        .times(Mat4.scale(1,10,1));
+        pedestal = pedestal.times(Mat4.translation(0,5,-45))
+                                        .times(Mat4.scale(1,5,1));
 
         pedestal = this.draw_box(context, program_state, pedestal, col1);
+
+        let treasure = Mat4.identity();
+
+        treasure = pedestal.times(Mat4.scale(0.75,0.3,0.75))
+                            .times(Mat4.translation(0,-2.3,0));
+
+        treasure = this.shapes.sphere.draw(context, program_state, treasure, this.materials.plastic.override({color:col3}));
         
+
+        //Guards
         let guard_1 = Mat4.identity();
 
         guard_1 = guard_1.times(Mat4.translation(45,5,0))
@@ -219,7 +220,10 @@ export class Assignment2 extends Base_Scene {
 
         guard_1 = this.draw_box(context, program_state, guard_1, col1);
 
-        guard_1 = guard_1.times(Mat4.translation(0,2.5,0));
+        guard_1 = guard_1.times(Mat4.translation(0,-0.1,0))
+                           .times(Mat4.scale(0.75,0.9,0.75));
+
+        guard_1 = this.shapes.sphere.draw(context, program_state, guard_1, this.materials.plastic.override({color:col1}));
 
         let guard_2 = Mat4.identity();
 
@@ -229,6 +233,11 @@ export class Assignment2 extends Base_Scene {
 
         guard_2 = this.draw_box(context, program_state, guard_2, col1);
 
+        guard_2 = guard_2.times(Mat4.translation(0,-0.1,0))
+                           .times(Mat4.scale(0.75,0.9,0.75));
+
+        guard_2 = this.shapes.sphere.draw(context, program_state, guard_2, this.materials.plastic.override({color:col1}));
+
         return model_transform;
     }
 
@@ -237,9 +246,6 @@ export class Assignment2 extends Base_Scene {
         const blue = hex_color("#1a9ffa");
         let model_transform = Mat4.identity();
 
-        // Example for drawing a cube, you can remove this line if needed
-        //this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:blue}));
-        // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
-         model_transform = this.draw_room(context, program_state, model_transform);
+        model_transform = this.draw_room(context, program_state, model_transform);
     }
 }
