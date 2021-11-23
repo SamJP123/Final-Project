@@ -64,7 +64,7 @@ class Base_Scene extends Scene {
             'cube': new Cube(),
             'outline': new Cube_Outline(),
             'sphere': new defs.Subdivision_Sphere(4),
-            'cone': new defs.Closed_Cone(3,4),
+            'cone': new defs.Closed_Cone(3,12),
         };
 
         // *** Materials
@@ -92,6 +92,8 @@ class Base_Scene extends Scene {
         // *** Lights: *** Values of vector or point lights.
         const light_position1 = vec4(0, 20, 5, 1);
         program_state.lights = [new Light(light_position1, color(1, 1, 1, 1), 1000)];
+
+        // FOR CLICKING TREASUERE if (context.scratchpad.controls.matrix)
     }
 }
 
