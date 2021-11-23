@@ -64,6 +64,7 @@ class Base_Scene extends Scene {
             'cube': new Cube(),
             'outline': new Cube_Outline(),
             'sphere': new defs.Subdivision_Sphere(4),
+            'cone': new defs.Closed_Cone(3,4),
         };
 
         // *** Materials
@@ -86,7 +87,7 @@ class Base_Scene extends Scene {
             program_state.set_camera(Mat4.translation(0, -10, -47));
         }
         program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, 1, 100);
+            Math.PI / 4, context.width / context.height, 1, 200);
 
         // *** Lights: *** Values of vector or point lights.
         const light_position1 = vec4(0, 20, 5, 1);
@@ -160,8 +161,10 @@ export class Assignment2 extends Base_Scene {
         let col1 = hex_color("#ff0000");
         let col2 = hex_color("#ffffff");
         let col3 = hex_color("#ffd700");
+        let col4 = hex_color("#ffff00");
         
         //Walls and floor
+        
         model_transform = model_transform.times(Mat4.scale(50,1,50));
 
         model_transform = this.draw_box(context, program_state, model_transform, col2);
@@ -203,9 +206,7 @@ export class Assignment2 extends Base_Scene {
 
         pedestal = this.draw_box(context, program_state, pedestal, col1);
 
-        let treasure = Mat4.identity();
-
-        treasure = pedestal.times(Mat4.scale(0.75,0.3,0.75))
+        let treasure = pedestal.times(Mat4.scale(0.75,0.3,0.75))
                             .times(Mat4.translation(0,-2.3,0));
 
         treasure = this.shapes.sphere.draw(context, program_state, treasure, this.materials.plastic.override({color:col3}));
@@ -215,28 +216,57 @@ export class Assignment2 extends Base_Scene {
         let guard_1 = Mat4.identity();
 
         guard_1 = guard_1.times(Mat4.translation(45,5,0))
-                        .times(Mat4.translation(0,0,20*Math.sin(Math.PI*t)))
-                        .times(Mat4.scale(3,3,3));
+                        .times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/3) + (1/3)*Math.sin(3*Math.PI*t/3) + (1/5)*Math.sin(5*Math.PI*t/3) + (1/7)*Math.sin(7*Math.PI*t/3))))
+                        .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
+                        .times(Mat4.scale(1,3,3));
 
         guard_1 = this.draw_box(context, program_state, guard_1, col1);
 
-        guard_1 = guard_1.times(Mat4.translation(0,-0.1,0))
-                           .times(Mat4.scale(0.75,0.9,0.75));
+        let guard_head = guard_1.times(Mat4.translation(0,-0.1,0))
+                           .times(Mat4.scale(2.25,0.9,0.75));
 
-        guard_1 = this.shapes.sphere.draw(context, program_state, guard_1, this.materials.plastic.override({color:col1}));
+        guard_head = this.shapes.sphere.draw(context, program_state, guard_head, this.materials.plastic.override({color:col1}));
+
+        let guard_light = guard_1.times(Mat4.rotation(-Math.PI/2,0,1,0))
+                         .times(Mat4.translation(1,-2,-11))
+                         .times(Mat4.scale(1,1,12));
+
+        if (Math.sin(Math.PI*t/3) < 0)
+        {
+            guard_light = guard_1.times(Mat4.rotation(Math.PI/2,0,1,0))
+                         .times(Mat4.translation(1,-2,-11))
+                         .times(Mat4.scale(1,1,12));
+        }
+
+        guard_light = this.shapes.cone.draw(context, program_state, guard_light, this.materials.plastic.override({color:col4}));
 
         let guard_2 = Mat4.identity();
 
         guard_2 = guard_2.times(Mat4.translation(-45,5,0))
-                        .times(Mat4.translation(0,0,20*Math.sin(Math.PI*t)))
-                        .times(Mat4.scale(3,3,3));
+                        .times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/3) + (1/3)*Math.sin(3*Math.PI*t/3) + (1/5)*Math.sin(5*Math.PI*t/3) + (1/7)*Math.sin(7*Math.PI*t/3))))
+                        .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
+                        .times(Mat4.scale(1,3,3));
 
         guard_2 = this.draw_box(context, program_state, guard_2, col1);
 
-        guard_2 = guard_2.times(Mat4.translation(0,-0.1,0))
-                           .times(Mat4.scale(0.75,0.9,0.75));
+        let guard_head2 = guard_2.times(Mat4.translation(0,-0.1,0))
+                           .times(Mat4.scale(2.25,0.9,0.75));
 
-        guard_2 = this.shapes.sphere.draw(context, program_state, guard_2, this.materials.plastic.override({color:col1}));
+        guard_head2 = this.shapes.sphere.draw(context, program_state, guard_head2, this.materials.plastic.override({color:col1}));
+
+        let guard_light2 = guard_2.times(Mat4.rotation(-Math.PI/2,0,1,0))
+                         .times(Mat4.translation(1,-2,-11))
+                         .times(Mat4.scale(1,1,12));
+
+        if (Math.sin(Math.PI*t/3) > 0)
+        {
+            guard_light2 = guard_2.times(Mat4.rotation(Math.PI/2,0,1,0))
+                         .times(Mat4.translation(1,-2,-11))
+                         .times(Mat4.scale(1,1,12));
+        }
+
+        guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
+
 
         return model_transform;
     }
