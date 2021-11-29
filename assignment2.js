@@ -105,9 +105,6 @@ export class Assignment2 extends Base_Scene {
      * experimenting with matrix transformations.
      */
     set_colors() {
-        // TODO:  Create a class member variable to store your cube's colors.
-        // Hint:  You might need to create a member variable at somewhere to store the colors, using `this`.
-        // Hint2: You can consider add a constructor for class Assignment2, or add member variables in Base_Scene's constructor.
         for (let i = 0; i < 8 ; i++)
         {
             this.colorArr[i] = color(Math.random(),Math.random(),Math.random(),1);
@@ -129,9 +126,6 @@ export class Assignment2 extends Base_Scene {
     }
 
     draw_box(context, program_state, model_transform, color1) {
-        // TODO:  Helper function for requirement 3 (see hint).
-        //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
-        // Hint:  You can add more parameters for this function, like the desired color, index of the box, etc.
 
         const t = this.t = program_state.animation_time / 1000
 
@@ -143,7 +137,6 @@ export class Assignment2 extends Base_Scene {
         {
             this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:color1}));
         }
-        //model_transform = model_transform.times(Mat4.translation(0, 2, 0));
         var r = 0;
 
         model_transform   = model_transform.times( Mat4.translation( -1, 1, 0) )
@@ -154,9 +147,6 @@ export class Assignment2 extends Base_Scene {
     }
 
     draw_room(context, program_state, model_transform) {
-        // TODO:  Helper function for requirement 3 (see hint).
-        //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
-        // Hint:  You can add more parameters for this function, like the desired color, index of the box, etc.
 
         const t = this.t = program_state.animation_time / 1000
 
