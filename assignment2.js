@@ -71,6 +71,8 @@ class Base_Scene extends Scene {
         this.materials = {
             plastic: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+            transparent: new Material(new defs.Phong_Shader(),
+                {ambient: 0.5, diffusivity: 0.5, color: [0,0,0,0]}),
         };
         // The white material and basic shader are used for drawing the outline.
         this.white = new Material(new defs.Basic_Shader());
@@ -92,8 +94,6 @@ class Base_Scene extends Scene {
         // *** Lights: *** Values of vector or point lights.
         const light_position1 = vec4(0, 20, 5, 1);
         program_state.lights = [new Light(light_position1, color(1, 1, 1, 1), 1000)];
-
-        // FOR CLICKING TREASUERE if (context.scratchpad.controls.matrix)
     }
 }
 
@@ -113,16 +113,16 @@ export class Assignment2 extends Base_Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Change Colors", ["c"], this.set_colors);
+        this.key_triggered_button("Capture treasure", ["c"], this.set_colors);
         // Add a button for controlling the scene.
-        this.key_triggered_button("Outline", ["o"], () => {
-            // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
-            this.outline = !this.outline;
-        });
-        this.key_triggered_button("Sit still", ["m"], () => {
-            // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
-            this.hover = !this.hover;
-        });
+//         this.key_triggered_button("Outline", ["o"], () => {
+//             // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
+//             this.outline = !this.outline;
+//         });
+//         this.key_triggered_button("Sit still", ["m"], () => {
+//             // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
+//             this.hover = !this.hover;
+//         });
     }
 
     draw_box(context, program_state, model_transform, color1) {
@@ -203,6 +203,13 @@ export class Assignment2 extends Base_Scene {
 
         treasure = this.shapes.sphere.draw(context, program_state, treasure, this.materials.plastic.override({color:col3}));
         
+        let capture_sphere = Mat4.identity();
+
+        capture_sphere = capture_sphere.times(Mat4.translation(0,5,-45))
+                                        .times(Mat4.translation(0,5,0))
+                                        .times(Mat4.scale(7,7,7));
+
+        capture_sphere = this.shapes.sphere.draw(context, program_state, capture_sphere, this.materials.transparent.override({color:[0,0,0,0]}));
 
         //Guards
         let guard_1 = Mat4.identity();
@@ -261,6 +268,14 @@ export class Assignment2 extends Base_Scene {
 
 
         return model_transform;
+
+        let player = context.scratchpad.controls.matrix();
+
+        player = player.times(Mat4.translation(0,0,10));
+
+        player = this.shapes(context, program_state, player, this.materials.plastic.override({color:col4}));
+
+
     }
 
     display(context, program_state) {
