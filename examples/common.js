@@ -833,6 +833,11 @@ const Movement_Controls = defs.Movement_Controls =
             this.inverse = inverse_closure;
         }
 
+        return_matrix()
+        {
+            return this.matrix;
+        }
+
         reset(graphics_state) {
             // reset(): Initially, the default target is the camera matrix that Shaders use, stored in the
             // encountered program_state object.  Targets must be pointer references made using closures.

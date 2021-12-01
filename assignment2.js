@@ -266,14 +266,14 @@ export class Assignment2 extends Base_Scene {
 
         guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
 
+        let player = program_state.camera_transform;
+
+        player = player.times(Mat4.translation(0,-3,0))
+                        .times(Mat4.scale(3,6,4));
+
+        player = this.shapes.sphere.draw(context, program_state, player, this.materials.transparent.override({color:[0,0,0,0]}));
 
         return model_transform;
-
-        let player = context.scratchpad.controls.matrix();
-
-        player = player.times(Mat4.translation(0,0,10));
-
-        player = this.shapes(context, program_state, player, this.materials.plastic.override({color:col4}));
 
 
     }
