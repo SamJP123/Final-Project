@@ -44,6 +44,87 @@ class Cube_Outline extends Shape {
     }
 }
 
+export class Body {
+    // **Body** can store and update the properties of a 3D body that incrementally
+    // moves from its previous place due to velocities.  It conforms to the
+    // approach outlined in the "Fix Your Timestep!" blog post by Glenn Fiedler.
+    constructor(shape, material, size) {
+        Object.assign(this,
+            {shape, material, size})
+    }
+
+    // (within some margin of distance).
+    static intersect_cube(p, margin = 0) {
+        return p.every(value => value >= -1 - margin && value <= 1 + margin)
+    }
+
+    static intersect_sphere(p, margin = 0) {
+        return p.dot(p) < 1 + margin;
+    }
+
+    emplace(location_matrix, linear_velocity, angular_velocity, spin_axis = vec3(0, 0, 0).randomized(1).normalized()) {                               // emplace(): assign the body's initial values, or overwrite them.
+        this.center = location_matrix.times(vec4(0, 0, 0, 1)).to3();
+        this.rotation = Mat4.translation(...this.center.times(-1)).times(location_matrix);
+        this.previous = {center: this.center.copy(), rotation: this.rotation.copy()};
+        // drawn_location gets replaced with an interpolated quantity:
+        this.drawn_location = location_matrix;
+        this.temp_matrix = Mat4.identity();
+        return Object.assign(this, {linear_velocity, angular_velocity, spin_axis})
+    }
+
+    advance(time_amount) {
+        // advance(): Perform an integration (the simplistic Forward Euler method) to
+        // advance all the linear and angular velocities one time-step forward.
+        this.previous = {center: this.center.copy(), rotation: this.rotation.copy()};
+        // Apply the velocities scaled proportionally to real time (time_amount):
+        // Linear velocity first, then angular:
+        this.center = this.center.plus(this.linear_velocity.times(time_amount));
+        this.rotation.pre_multiply(Mat4.rotation(time_amount * this.angular_velocity, ...this.spin_axis));
+    }
+
+    // The following are our various functions for testing a single point,
+    // p, against some analytically-known geometric volume formula
+
+    blend_rotation(alpha) {
+        // blend_rotation(): Just naively do a linear blend of the rotations, which looks
+        // ok sometimes but otherwise produces shear matrices, a wrong result.
+
+        // TODO:  Replace this function with proper quaternion blending, and perhaps
+        // store this.rotation in quaternion form instead for compactness.
+        return this.rotation.map((x, i) => vec4(...this.previous.rotation[i]).mix(x, alpha));
+    }
+
+    blend_state(alpha) {
+        // blend_state(): Compute the final matrix we'll draw using the previous two physical
+        // locations the object occupied.  We'll interpolate between these two states as
+        // described at the end of the "Fix Your Timestep!" blog post.
+        this.drawn_location = Mat4.translation(...this.previous.center.mix(this.center, alpha))
+            .times(this.blend_rotation(alpha))
+            .times(Mat4.scale(...this.size));
+    }
+
+    check_if_colliding(b, collider) {
+        // check_if_colliding(): Collision detection function.
+        // DISCLAIMER:  The collision method shown below is not used by anyone; it's just very quick
+        // to code.  Making every collision body an ellipsoid is kind of a hack, and looping
+        // through a list of discrete sphere points to see if the ellipsoids intersect is *really* a
+        // hack (there are perfectly good analytic expressions that can test if two ellipsoids
+        // intersect without discretizing them into points).
+        if (this == b)
+            return false;
+        // Nothing collides with itself.
+        // Convert sphere b to the frame where a is a unit sphere:
+        const T = this.inverse.times(b.drawn_location, this.temp_matrix);
+
+        const {intersect_test, points, leeway} = collider;
+        // For each vertex in that b, shift to the coordinate frame of
+        // a_inv*b.  Check if in that coordinate frame it penetrates
+        // the unit sphere at the origin.  Leave some leeway.
+        return points.arrays.position.some(p =>
+            intersect_test(T.times(p.to4(1)).to3(), leeway));
+    }
+}
+
 class Base_Scene extends Scene {
     /**
      *  **Base_scene** is a Scene that can be added to any display canvas.
@@ -55,6 +136,7 @@ class Base_Scene extends Scene {
         this.hover = this.swarm = false;
         this.outline = false;
         this.colorArr=[];
+        this.guards=[];
         for (let i = 0; i < 8 ; i++)
         {
             this.colorArr[i] = color(Math.random(),Math.random(),Math.random(),1);
@@ -139,7 +221,7 @@ export class Assignment2 extends Base_Scene {
         }
         var r = 0;
 
-        model_transform   = model_transform.times( Mat4.translation( -1, 1, 0) )
+        model_transform = model_transform.times( Mat4.translation( -1, 1, 0) )
                                              .times( Mat4.rotation( r,0, 0, 1 ) ) 
                                              .times( Mat4.translation(1, 1, 0) );
         
@@ -221,10 +303,14 @@ export class Assignment2 extends Base_Scene {
 
         guard_1 = this.draw_box(context, program_state, guard_1, col1);
 
+        this.guards[0] = guard_1;
+
         let guard_head = guard_1.times(Mat4.translation(0,-0.1,0))
                            .times(Mat4.scale(2.25,0.9,0.75));
 
         guard_head = this.shapes.sphere.draw(context, program_state, guard_head, this.materials.plastic.override({color:col1}));
+
+        this.guards[1] = guard_head;
 
         let guard_light = guard_1.times(Mat4.rotation(-Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,-2,-11))
@@ -239,6 +325,8 @@ export class Assignment2 extends Base_Scene {
 
         guard_light = this.shapes.cone.draw(context, program_state, guard_light, this.materials.plastic.override({color:col4}));
 
+        this.guards[2] = guard_light;
+
         let guard_2 = Mat4.identity();
 
         guard_2 = guard_2.times(Mat4.translation(-45,5,0))
@@ -248,10 +336,14 @@ export class Assignment2 extends Base_Scene {
 
         guard_2 = this.draw_box(context, program_state, guard_2, col1);
 
+        this.guards[3] = guard_2;
+
         let guard_head2 = guard_2.times(Mat4.translation(0,-0.1,0))
                            .times(Mat4.scale(2.25,0.9,0.75));
 
         guard_head2 = this.shapes.sphere.draw(context, program_state, guard_head2, this.materials.plastic.override({color:col1}));
+
+        this.guards[4] = guard_head2;
 
         let guard_light2 = guard_2.times(Mat4.rotation(-Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,-2,-11))
@@ -266,6 +358,8 @@ export class Assignment2 extends Base_Scene {
 
         guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
 
+        this.guards[5] = guard_light2;
+
         let player = program_state.camera_transform;
 
         player = player.times(Mat4.translation(0,-3,0))
@@ -273,9 +367,28 @@ export class Assignment2 extends Base_Scene {
 
         player = this.shapes.sphere.draw(context, program_state, player, this.materials.transparent.override({color:[0,0,0,0]}));
 
+        this.guards[6] = player;
+
+        const collider = {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5};
+
+//         for (let a of this.guards) {
+//             // Cache the inverse of matrix of body "a" to save time.
+
+//             // *** Collision process is here ***
+//             // Loop through all bodies again (call each "b"):
+//             for (let b of this.guards) {
+//                 // Pass the two bodies and the collision shape to check_if_colliding():
+//                 if (!a.check_if_colliding(b, collider))
+//                     continue;
+//                 // If we get here, we collided, so turn red and zero out the
+//                 // velocity so they don't inter-penetrate any further.
+//                 a.material = this.materials.plastic.override({color:[0,0,0,0]});
+//             }
+
         return model_transform;
 
 
+    //}
     }
 
     display(context, program_state) {

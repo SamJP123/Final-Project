@@ -817,7 +817,8 @@ const Movement_Controls = defs.Movement_Controls =
             const data_members = {
                 roll: 0, look_around_locked: true,
                 thrust: vec3(0, 0, 0), pos: vec3(0, 0, 0), z_axis: vec3(0, 0, 0),
-                radians_per_frame: 1 / 200, meters_per_frame: 20, speed_multiplier: 1
+                radians_per_frame: 1 / 200, meters_per_frame: 20, speed_multiplier: 1,
+                originvec: vec4(0,0,0,1), temp_position: Mat4.identity()
             };
             Object.assign(this, data_members);
 
@@ -885,6 +886,10 @@ const Movement_Controls = defs.Movement_Controls =
             this.new_line();
 
             //this.key_triggered_button("Up", [" "], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
+            //this.temp_position = this.matrix().times(originvec);
+
+            //console.log(temp_position);
+
             this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = 0.4, undefined, () => this.thrust[2] = 0);
             //this.new_line();
             this.key_triggered_button("Left", ["a"], () => this.thrust[0] = 0.4, undefined, () => this.thrust[0] = 0);
