@@ -534,7 +534,7 @@ export class Assignment2 extends Base_Scene {
 
 
 
-        this.guards[6] = player;
+        //this.guards[6] = player;
 
         const collider = {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5};
 
