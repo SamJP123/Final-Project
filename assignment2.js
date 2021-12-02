@@ -1,7 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture, Shader
 } = tiny;
 
 class Cube extends Shape {
@@ -143,21 +143,45 @@ class Base_Scene extends Scene {
         }
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
-            'cube': new Cube(),
+            'cube': new defs.Cube(),
+            box_2: new defs.Cube(),
             'outline': new Cube_Outline(),
             'sphere': new defs.Subdivision_Sphere(4),
             'cone': new defs.Closed_Cone(3,12),
         };
+    
 
         // *** Materials
+        //const bump = new defs.Fake_Bump_Map(1);
         this.materials = {
             plastic: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             transparent: new Material(new defs.Phong_Shader(),
-                {ambient: 0.5, diffusivity: 0.5, color: [0,0,0,0]}),
+                {ambient: 0.5, diffusivity: 0.5, color: [0,0,0,0]})
+                
         };
+
+       const texture = new defs.Textured_Phong(1);
+
+        const bump = new defs.Fake_Bump_Map(1);
+        this.wrap =
+            {
+                a: new Material(bump, {ambient: 1, ambient: 0.5, diffusivity: 0.5, texture: new Texture("assets/lose.png")}),
+                b: new Material(bump, {ambient: 1, texture: new Texture("assets/win.png")}),
+                d: new Material(bump, {ambient: 1, texture: new Texture("assets/start.png")}),
+                c: new Material(bump, {ambient: 1, texture: this.texture})
+            }
         // The white material and basic shader are used for drawing the outline.
         this.white = new Material(new defs.Basic_Shader());
+
+        //screen bools
+        this.start = false;
+        this.begin = false;
+        this.lose = false;
+        this.win = false;
+        this.playing = false;
+        this.treasure_touch = false;
+        this.guard_touch = false;
     }
 
     display(context, program_state) {
@@ -193,9 +217,49 @@ export class Assignment2 extends Base_Scene {
         }
     }
 
+    start_game() {
+
+        if (!this.playing){
+            this.begin = true;
+            this.lose = false;
+            this.win = false;
+            this.playing = true;
+        }
+        
+    }
+
+    capture_treasure() {
+    
+        if (this.treasure_touch){
+            this.win = true;
+            this.begin = false;
+            this.playing = false;
+        }
+        
+    }
+
+    //TESTING LOSS SCREEN tHIS SHOULD BE PLACED IN DRAWING CODE AFTER COLLISION DETECTION IS MADE
+    lose_game() {
+        if(this.guard_touch){
+            this.lose = true;
+            this.begin = false;
+            this.playing = false;
+        }
+
+        else{
+            this.lose = true;
+            this.begin = false;
+            this.playing = false;
+        }
+        
+    }
+
+
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Capture treasure", ["c"], this.set_colors);
+        this.key_triggered_button("Capture treasure", ["c"], this.capture_treasure);
+        this.key_triggered_button("Quit/AutoLoss", ["h"], this.lose_game);
+        this.key_triggered_button("Start Game", [" "], this.start_game);
         // Add a button for controlling the scene.
 //         this.key_triggered_button("Outline", ["o"], () => {
 //             // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
@@ -227,9 +291,86 @@ export class Assignment2 extends Base_Scene {
         
         return model_transform;
     }
+    draw_box_text(context, program_state, model_transform, texture) {
 
+        const t = this.t = program_state.animation_time / 1000
+
+        if(this.outline)
+        {
+           this.shapes.outline.draw(context, program_state, model_transform, this.white, "LINES");
+        }
+        else
+        {
+            this.shapes.cube.draw(context, program_state, model_transform, texture);
+        }
+        
+        
+        return model_transform;
+    }
     draw_room(context, program_state, model_transform) {
+        if (!this.start){
 
+             
+            program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 2.2], [0, 0, 0], [0, 1, 0])));
+            program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
+            
+            let col1 = hex_color("#ff0000");
+            let model_transformS = Mat4.identity().times(Mat4.translation(0,-0.1,0));
+            
+            model_transformS = this.draw_box_text(context, program_state, model_transformS, this.wrap.d);
+            if (this.begin)
+            {
+                        this.start = true;
+                        program_state.set_camera(Mat4.translation(0, -10, -47));
+
+            }
+        }
+
+        if (this.win){
+
+             
+            program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 2.2], [0, 0, 0], [0, 1, 0])));
+            //program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
+            
+            let col1 = hex_color("#ff0000");
+            let model_transformS = Mat4.identity().times(Mat4.translation(0,-0.1,0));
+            
+            model_transformS = this.draw_box_text(context, program_state, model_transformS, this.wrap.b);
+            if (this.begin)
+            {
+                        //this.start = true;
+                       program_state.set_camera(Mat4.translation(0, -10, -47));
+
+            }
+        }
+
+        else if (this.lose){
+
+            
+            program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 2.2], [0, 0, 0], [0, 1, 0])));
+            //program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
+            
+            let col1 = hex_color("#ff0000");
+            let model_transformS = Mat4.identity().times(Mat4.translation(0,-0.1,0));
+            
+            model_transformS = this.draw_box_text(context, program_state, model_transformS, this.wrap.a);
+            if (this.begin)  
+            {
+                        //this.start = true;
+                        program_state.set_camera(Mat4.translation(0, -10, -47));
+
+            }
+        }
+
+       else if (this.playing)
+       {
+        if (this.begin)
+            {
+                        //this.start = true;
+                       program_state.set_camera(Mat4.translation(0, -10, -47));
+                       this.begin = false;
+
+            }
         const t = this.t = program_state.animation_time / 1000
 
         let col1 = hex_color("#ff0000");
@@ -366,6 +507,32 @@ export class Assignment2 extends Base_Scene {
                         .times(Mat4.scale(3,6,4));
 
         player = this.shapes.sphere.draw(context, program_state, player, this.materials.transparent.override({color:[0,0,0,0]}));
+       }
+
+
+        ///////////////////////////////////
+        //INSERT COLLISION DETECTION HERE
+        ///////////////////////////////////
+
+        
+        //WIN CONDITION - currently set as true but should be when player is touching treasure area
+        if (true){
+            this.treasure_touch = true; 
+        } 
+        else{
+            this.treasure_touch = false;
+        }
+
+        //LOSE CONDITION - set as false but should be when player touches a guard
+        if (false){
+            this.lose = true;
+            this.begin = false;
+            this.playing = false;
+        }
+
+        //INSERT WALL COLLISION DETECTION HERE?
+
+
 
         this.guards[6] = player;
 
