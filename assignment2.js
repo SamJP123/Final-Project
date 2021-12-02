@@ -155,7 +155,7 @@ class Base_Scene extends Scene {
         //const bump = new defs.Fake_Bump_Map(1);
         this.materials = {
             plastic: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+                {ambient: .3, diffusivity: .6, color: hex_color("#ffffff")}),
             transparent: new Material(new defs.Phong_Shader(),
                 {ambient: 0.5, diffusivity: 0.5, color: [0,0,0,0]})
                 
@@ -163,13 +163,15 @@ class Base_Scene extends Scene {
 
        const texture = new defs.Textured_Phong(1);
 
-        const bump = new defs.Fake_Bump_Map(1);
+        const bump = new defs.Fake_Bump_Map(3);
         this.wrap =
             {
-                a: new Material(bump, {ambient: 1, ambient: 0.5, diffusivity: 0.5, texture: new Texture("assets/lose.png")}),
+                a: new Material(bump, {ambient: 1, texture: new Texture("assets/lose.png")}),
                 b: new Material(bump, {ambient: 1, texture: new Texture("assets/win.png")}),
                 d: new Material(bump, {ambient: 1, texture: new Texture("assets/start.png")}),
-                c: new Material(bump, {ambient: 1, texture: this.texture})
+                c: new Material(bump, {ambient: 1, texture: this.texture}),
+                e: new Material(bump, {ambient: 0.5, diffusivity: 0.5, texture: new Texture("assets/wall.jpg")}),
+                f: new Material(bump, {ambient: 0.3, diffusivity: 0.5, texture: new Texture("assets/floor.jpg")})
             }
         // The white material and basic shader are used for drawing the outline.
         this.white = new Material(new defs.Basic_Shader());
@@ -200,6 +202,7 @@ class Base_Scene extends Scene {
         // *** Lights: *** Values of vector or point lights.
         const light_position1 = vec4(0, 20, 5, 1);
         program_state.lights = [new Light(light_position1, color(1, 1, 1, 1), 1000)];
+
     }
 }
 
@@ -382,35 +385,35 @@ export class Assignment2 extends Base_Scene {
         
         model_transform = model_transform.times(Mat4.scale(50,1,50));
 
-        model_transform = this.draw_box(context, program_state, model_transform, col2);
+        model_transform = this.draw_box_text(context, program_state, model_transform, this.wrap.f);
 
         let model_transform2 = Mat4.identity();
 
         model_transform2 = model_transform2.times(Mat4.translation(50,25,0))
                                         .times(Mat4.scale(1,25,50));
 
-        model_transform2 = this.draw_box(context, program_state, model_transform2, col2);
+        model_transform2 = this.draw_box_text(context, program_state, model_transform2, this.wrap.e);
 
         let model_transform3 = Mat4.identity();
 
         model_transform3 = model_transform3.times(Mat4.translation(-50,25,0))
                                         .times(Mat4.scale(1,25,50));
 
-        model_transform3 = this.draw_box(context, program_state, model_transform3, col2);
+        model_transform3 = this.draw_box_text(context, program_state, model_transform3, this.wrap.e);
 
         let model_transform4 = Mat4.identity();
 
         model_transform4 = model_transform4.times(Mat4.translation(0,25,-50))
                                         .times(Mat4.scale(50,25,1));
 
-        model_transform4 = this.draw_box(context, program_state, model_transform4, col2);
+        model_transform4 = this.draw_box_text(context, program_state, model_transform4, this.wrap.e);
 
         let model_transform5 = Mat4.identity();
 
         model_transform5 = model_transform5.times(Mat4.translation(0,25,50))
                                         .times(Mat4.scale(50,25,1));
 
-        model_transform5 = this.draw_box(context, program_state, model_transform5, col2);
+        model_transform5 = this.draw_box_text(context, program_state, model_transform5, this.wrap.e);
 
 
         //Pedestal and treasure
@@ -534,10 +537,10 @@ export class Assignment2 extends Base_Scene {
 
 
 
-        //this.guards[6] = player;
+        // this.guards[6] = player;
 
         const collider = {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5};
-
+ 
 //         for (let a of this.guards) {
 //             // Cache the inverse of matrix of body "a" to save time.
 
