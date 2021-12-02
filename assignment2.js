@@ -136,7 +136,14 @@ class Base_Scene extends Scene {
         this.hover = this.swarm = false;
         this.outline = false;
         this.colorArr=[];
+        this.colliders = [
+            {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5},
+            {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(2), leeway: .3},
+            {intersect_test: Body.intersect_cube, points: new defs.Cube(), leeway: .1}
+        ];
+        this.collider_selection = 0;
         this.guards=[];
+        this.player = new Body();
         for (let i = 0; i < 8 ; i++)
         {
             this.colorArr[i] = color(Math.random(),Math.random(),Math.random(),1);
@@ -452,18 +459,21 @@ export class Assignment2 extends Base_Scene {
                 .emplace(guard_1,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        g1.shape.draw(context, program_state, g1.drawn_location,g1.material);
+        this.guards.push(g1);
+        this.guards[0].shape.draw(context, program_state, g1.drawn_location,g1.material);
 
         //guard_1 = this.draw_box(context, program_state, guard_1, col1);
-
-        this.guards[0] = guard_1;
 
         let guard_head = guard_1.times(Mat4.translation(0,-0.1,0))
                            .times(Mat4.scale(2.25,0.9,0.75));
 
-        guard_head = this.shapes.sphere.draw(context, program_state, guard_head, this.materials.plastic.override({color:col1}));
+        let gh1 = new Body(this.shapes.sphere, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+                .emplace(guard_head,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards[1] = guard_head;
+        this.guards.push(gh1);
+        this.guards[1].shape.draw(context, program_state, gh1.drawn_location,gh1.material);
+        //guard_head = this.shapes.sphere.draw(context, program_state, guard_head, this.materials.plastic.override({color:col1}));
 
         let guard_light = guard_1.times(Mat4.rotation(-Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,-2,-11))
@@ -476,9 +486,14 @@ export class Assignment2 extends Base_Scene {
                          .times(Mat4.scale(1,1,12));
         }
 
-        guard_light = this.shapes.cone.draw(context, program_state, guard_light, this.materials.plastic.override({color:col4}));
+        let gl1 = new Body(this.shapes.cone, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+                .emplace(guard_light,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards[2] = guard_light;
+        this.guards.push(gl1);
+        this.guards[2].shape.draw(context, program_state, gl1.drawn_location,gl1.material);
+
+        //guard_light = this.shapes.cone.draw(context, program_state, guard_light, this.materials.plastic.override({color:col4}));
 
         let guard_2 = Mat4.identity();
 
@@ -487,16 +502,26 @@ export class Assignment2 extends Base_Scene {
                         .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
                         .times(Mat4.scale(1,3,3));
 
-        guard_2 = this.draw_box(context, program_state, guard_2, col1);
+        
+        let g2 = new Body(this.shapes.cube, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+                .emplace(guard_2,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards[3] = guard_2;
+        this.guards.push(g2);
+        this.guards[3].shape.draw(context, program_state, g2.drawn_location,g2.material);
+        //guard_2 = this.draw_box(context, program_state, guard_2, col1);
 
         let guard_head2 = guard_2.times(Mat4.translation(0,-0.1,0))
                            .times(Mat4.scale(2.25,0.9,0.75));
 
-        guard_head2 = this.shapes.sphere.draw(context, program_state, guard_head2, this.materials.plastic.override({color:col1}));
+        let gh2 = new Body(this.shapes.sphere, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+                .emplace(guard_head2,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards[4] = guard_head2;
+        this.guards.push(gh2);
+        this.guards[4].shape.draw(context, program_state, gh2.drawn_location,gh2.material);
+
+        //guard_head2 = this.shapes.sphere.draw(context, program_state, guard_head2, this.materials.plastic.override({color:col1}));
 
         let guard_light2 = guard_2.times(Mat4.rotation(-Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,-2,-11))
@@ -508,23 +533,54 @@ export class Assignment2 extends Base_Scene {
                          .times(Mat4.translation(1,-2,-11))
                          .times(Mat4.scale(1,1,12));
         }
+        
+        let gl2 = new Body(this.shapes.cone, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+                .emplace(guard_light2,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
+        this.guards.push(gl2);
+        this.guards[5].shape.draw(context, program_state, gl2.drawn_location,gl2.material);
 
-        this.guards[5] = guard_light2;
+        //guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
 
         let player = program_state.camera_transform;
 
         player = player.times(Mat4.translation(0,-3,0))
                         .times(Mat4.scale(3,6,4));
+        
+        
+        let pmodel = new Body(this.shapes.sphere, this.materials.transparent.override({color:[0,0,0,0]}), vec3(1, 1 + Math.random(), 1))
+                .emplace(player,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        player = this.shapes.sphere.draw(context, program_state, player, this.materials.transparent.override({color:[0,0,0,0]}));
+        this.player = pmodel;
+        this.player.shape.draw(context, program_state, pmodel.drawn_location,pmodel.material);
+
+        //player = this.shapes.sphere.draw(context, program_state, player, this.materials.transparent.override({color:[0,0,0,0]}));
+
+        const collider = this.colliders[this.collider_selection];
+
+        this.player.inverse = Mat4.inverse(this.player.drawn_location);
+
+        
+
+        for (let b of this.guards) {
+                // Pass the two bodies and the collision shape to check_if_colliding():
+                if (!this.player.check_if_colliding(b, collider))
+                    continue;
+                // If we get here, we collided, so turn red and zero out the
+                // velocity so they don't inter-penetrate any further.
+
+                this.playing = false;
+            }
        }
 
 
         ///////////////////////////////////
         //INSERT COLLISION DETECTION HERE
         ///////////////////////////////////
+
+        
 
         
         //WIN CONDITION - currently set as true but should be when player is touching treasure area
@@ -548,7 +604,6 @@ export class Assignment2 extends Base_Scene {
 
         // this.guards[6] = player;
 
-        const collider = {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5};
  
 //         for (let a of this.guards) {
 //             // Cache the inverse of matrix of body "a" to save time.
