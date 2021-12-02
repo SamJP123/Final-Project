@@ -184,6 +184,8 @@ class Base_Scene extends Scene {
         this.playing = false;
         this.treasure_touch = false;
         this.guard_touch = false;
+        
+
     }
 
     display(context, program_state) {
@@ -445,7 +447,14 @@ export class Assignment2 extends Base_Scene {
                         .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
                         .times(Mat4.scale(1,3,3));
 
-        guard_1 = this.draw_box(context, program_state, guard_1, col1);
+        
+        let g1 = new Body(this.shapes.cube, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+                .emplace(guard_1,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+
+        g1.shape.draw(context, program_state, g1.drawn_location,g1.material);
+
+        //guard_1 = this.draw_box(context, program_state, guard_1, col1);
 
         this.guards[0] = guard_1;
 
