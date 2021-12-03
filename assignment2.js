@@ -98,7 +98,7 @@ class Base_Scene extends Scene {
         this.colliders = [
             {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .4},
             {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(2), leeway: .3},
-            {intersect_test: Body.intersect_cube, points: new defs.Subdivision_Sphere(2), leeway: 0.5 }
+            {intersect_test: Body.intersect_cube, points: new defs.Subdivision_Sphere(2), leeway: 0.4 }
         ];
         this.collider_selection = 0;
         this.guards=[];
