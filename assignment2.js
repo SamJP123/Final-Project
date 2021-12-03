@@ -162,9 +162,11 @@ class Base_Scene extends Scene {
         //const bump = new defs.Fake_Bump_Map(1);
         this.materials = {
             plastic: new Material(new defs.Phong_Shader(),
-                {ambient: .3, diffusivity: .6, color: hex_color("#ffffff")}),
+                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             transparent: new Material(new defs.Phong_Shader(),
-                {ambient: 0.5, diffusivity: 0.5, color: [0,0,0,0]})
+                {ambient: 0.3, diffusivity: 0.5, color: [0,0,0,0]}),
+            transparent2: new Material(new defs.Phong_Shader(),
+                {ambient: 1, diffusivity: 0.5, color: [1,1,0,0.6]})
                 
         };
 
@@ -209,8 +211,9 @@ class Base_Scene extends Scene {
             Math.PI / 4, context.width / context.height, 1, 200);
 
         // *** Lights: *** Values of vector or point lights.
-        const light_position1 = vec4(0, 20, 5, 1);
-        program_state.lights = [new Light(light_position1, color(1, 1, 1, 1), 1000)];
+        const light_position1 = vec4(-1.5,11,-45, 1);
+        program_state.lights = [new Light(light_position1, color(1, 1, 1, 1), 50)];
+        
 
     }
 }
@@ -452,10 +455,10 @@ export class Assignment2 extends Base_Scene {
         guard_1 = guard_1.times(Mat4.translation(45,5,0))
                         .times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/3) + (1/3)*Math.sin(3*Math.PI*t/3) + (1/5)*Math.sin(5*Math.PI*t/3) + (1/7)*Math.sin(7*Math.PI*t/3))))
                         .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
-                        .times(Mat4.scale(1,3,3));
+                        .times(Mat4.scale(1,5,3));
 
         
-        let g1 = new Body(this.shapes.cube, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+        let g1 = new Body(this.shapes.cube, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
                 .emplace(guard_1,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
@@ -464,10 +467,10 @@ export class Assignment2 extends Base_Scene {
 
         //guard_1 = this.draw_box(context, program_state, guard_1, col1);
 
-        let guard_head = guard_1.times(Mat4.translation(0,-0.1,0))
-                           .times(Mat4.scale(2.25,0.9,0.75));
+        let guard_head = guard_1.times(Mat4.translation(0,1.4,0))
+                           .times(Mat4.scale(2.25,0.5,0.75));
 
-        let gh1 = new Body(this.shapes.sphere, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+        let gh1 = new Body(this.shapes.sphere, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
                 .emplace(guard_head,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
@@ -476,23 +479,22 @@ export class Assignment2 extends Base_Scene {
         //guard_head = this.shapes.sphere.draw(context, program_state, guard_head, this.materials.plastic.override({color:col1}));
 
         let guard_light = guard_1.times(Mat4.rotation(-Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,-2,-11))
-                         .times(Mat4.scale(1,1,12));
+                         .times(Mat4.translation(1,0,-10))
+                         .times(Mat4.scale(0.5,0.5,10));
 
         if (Math.sin(Math.PI*t/3) < 0)
         {
             guard_light = guard_1.times(Mat4.rotation(Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,-2,-11))
-                         .times(Mat4.scale(1,1,12));
+                         .times(Mat4.translation(1,0,-10))
+                         .times(Mat4.scale(0.5,0.5,10));
         }
 
-        let gl1 = new Body(this.shapes.cone, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+        let gl1 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
                 .emplace(guard_light,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
         this.guards.push(gl1);
         this.guards[2].shape.draw(context, program_state, gl1.drawn_location,gl1.material);
-
         //guard_light = this.shapes.cone.draw(context, program_state, guard_light, this.materials.plastic.override({color:col4}));
 
         let guard_2 = Mat4.identity();
@@ -500,10 +502,10 @@ export class Assignment2 extends Base_Scene {
         guard_2 = guard_2.times(Mat4.translation(-45,5,0))
                         .times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/3) + (1/3)*Math.sin(3*Math.PI*t/3) + (1/5)*Math.sin(5*Math.PI*t/3) + (1/7)*Math.sin(7*Math.PI*t/3))))
                         .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
-                        .times(Mat4.scale(1,3,3));
+                        .times(Mat4.scale(1,5,3));
 
         
-        let g2 = new Body(this.shapes.cube, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+        let g2 = new Body(this.shapes.cube, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
                 .emplace(guard_2,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
@@ -511,10 +513,10 @@ export class Assignment2 extends Base_Scene {
         this.guards[3].shape.draw(context, program_state, g2.drawn_location,g2.material);
         //guard_2 = this.draw_box(context, program_state, guard_2, col1);
 
-        let guard_head2 = guard_2.times(Mat4.translation(0,-0.1,0))
-                           .times(Mat4.scale(2.25,0.9,0.75));
+        let guard_head2 = guard_2.times(Mat4.translation(0,1.4,0))
+                           .times(Mat4.scale(2.25,0.5,0.75));
 
-        let gh2 = new Body(this.shapes.sphere, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+        let gh2 = new Body(this.shapes.sphere, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
                 .emplace(guard_head2,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
@@ -524,23 +526,22 @@ export class Assignment2 extends Base_Scene {
         //guard_head2 = this.shapes.sphere.draw(context, program_state, guard_head2, this.materials.plastic.override({color:col1}));
 
         let guard_light2 = guard_2.times(Mat4.rotation(-Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,-2,-11))
-                         .times(Mat4.scale(1,1,12));
+                         .times(Mat4.translation(1,0,-10))
+                         .times(Mat4.scale(0.5,0.5,10));
 
         if (Math.sin(Math.PI*t/3) > 0)
         {
             guard_light2 = guard_2.times(Mat4.rotation(Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,-2,-11))
-                         .times(Mat4.scale(1,1,12));
+                         .times(Mat4.translation(1,0,-10))
+                         .times(Mat4.scale(0.5,0.5,10));
         }
         
-        let gl2 = new Body(this.shapes.cone, this.materials.plastic, vec3(1, 1 + Math.random(), 1))
+        let gl2 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
                 .emplace(guard_light2,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
         this.guards.push(gl2);
         this.guards[5].shape.draw(context, program_state, gl2.drawn_location,gl2.material);
-
         //guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
 
         let player = program_state.camera_transform;
@@ -571,7 +572,7 @@ export class Assignment2 extends Base_Scene {
                 // If we get here, we collided, so turn red and zero out the
                 // velocity so they don't inter-penetrate any further.
 
-                this.playing = false;
+                this.lose_game();
             }
        }
 
