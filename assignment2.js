@@ -4,6 +4,7 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture, Shader
 } = tiny;
 
+//Body Class from Collisions Demo
 
 export class Body {
     // **Body** can store and update the properties of a 3D body that incrementally
@@ -50,8 +51,6 @@ export class Body {
         // blend_rotation(): Just naively do a linear blend of the rotations, which looks
         // ok sometimes but otherwise produces shear matrices, a wrong result.
 
-        // TODO:  Replace this function with proper quaternion blending, and perhaps
-        // store this.rotation in quaternion form instead for compactness.
         return this.rotation.map((x, i) => vec4(...this.previous.rotation[i]).mix(x, alpha));
     }
 
@@ -94,24 +93,21 @@ class Base_Scene extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-        this.hover = this.swarm = false;
-        this.outline = false;
-        this.colorArr=[];
+		
+		//Body Var Init
         this.colliders = [
-            {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5},
+            {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .4},
             {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(2), leeway: .3},
-            {intersect_test: Body.intersect_cube, points: new defs.Cube(), leeway: 1}
+            {intersect_test: Body.intersect_cube, points: new defs.Subdivision_Sphere(2), leeway: 0.5 }
         ];
         this.collider_selection = 0;
         this.guards=[];
         this.walls=[];
         this.player = new Body();
         this.capture_space = new Body();
-        for (let i = 0; i < 8 ; i++)
-        {
-            this.colorArr[i] = color(Math.random(),Math.random(),Math.random(),1);
-        }
-        // At the beginning of our program, load one of each of these shape definitions onto the GPU.
+		
+		
+        // Shape Definitions
         this.shapes = {
             'cube': new defs.Cube(),
             box_2: new defs.Cube(),
@@ -120,8 +116,7 @@ class Base_Scene extends Scene {
         };
     
 
-        // *** Materials
-        //const bump = new defs.Fake_Bump_Map(1);
+        // Load Materials
         this.materials = {
             plastic: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
@@ -131,9 +126,9 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: 0.5, color: [1,1,0,0.6]})
                 
         };
-
-       const texture = new defs.Textured_Phong(1);
-
+		
+		//Load Textures
+        const texture = new defs.Textured_Phong(1);
         const bump = new defs.Fake_Bump_Map(3);
         this.wrap =
             {
@@ -144,10 +139,8 @@ class Base_Scene extends Scene {
                 e: new Material(bump, {ambient: 0.5, diffusivity: 0.5, texture: new Texture("assets/wall.jpg")}),
                 f: new Material(bump, {ambient: 0.3, diffusivity: 0.5, texture: new Texture("assets/floor.jpg")})
             }
-        // The white material and basic shader are used for drawing the outline.
-        this.white = new Material(new defs.Basic_Shader());
 
-        //screen bools
+        //Game State Booleans
         this.start = false;
         this.begin = false;
         this.lose = false;
@@ -187,13 +180,9 @@ export class Assignment2 extends Base_Scene {
      * This gives you a very small code sandbox for editing a simple scene, and for
      * experimenting with matrix transformations.
      */
-    set_colors() {
-        for (let i = 0; i < 8 ; i++)
-        {
-            this.colorArr[i] = color(Math.random(),Math.random(),Math.random(),1);
-        }
-    }
-
+	
+	//Trigger Functions
+	
     start_game() {
 
         if (!this.playing){
@@ -215,7 +204,6 @@ export class Assignment2 extends Base_Scene {
         
     }
 
-    //TESTING LOSS SCREEN tHIS SHOULD BE PLACED IN DRAWING CODE AFTER COLLISION DETECTION IS MADE
     lose_game() {
         if(this.guard_touch){
             this.lose = true;
@@ -231,60 +219,39 @@ export class Assignment2 extends Base_Scene {
         
     }
 
-
+	//Control Panel Creation
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         this.key_triggered_button("Capture treasure", ["c"], this.capture_treasure);
         this.key_triggered_button("Quit/AutoLoss", ["h"], this.lose_game);
         this.key_triggered_button("Start Game", [" "], this.start_game);
-        // Add a button for controlling the scene.
-//         this.key_triggered_button("Outline", ["o"], () => {
-//             // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
-//             this.outline = !this.outline;
-//         });
-//         this.key_triggered_button("Sit still", ["m"], () => {
-//             // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
-//             this.hover = !this.hover;
-//         });
+        
     }
 
+	//Draw Function using Color
     draw_box(context, program_state, model_transform, color1) {
 
-        const t = this.t = program_state.animation_time / 1000
-
-        if(this.outline)
-        {
-           this.shapes.outline.draw(context, program_state, model_transform, this.white, "LINES");
-        }
-        else
-        {
-            this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:color1}));
-        }
-        var r = 0;
-
+        const t = this.t = program_state.animation_time / 1000;
+        this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:color1}));
         model_transform = model_transform.times( Mat4.translation( -1, 1, 0) )
-                                             .times( Mat4.rotation( r,0, 0, 1 ) ) 
+                                             .times( Mat4.rotation( 0 ,0, 0, 1 ) ) 
                                              .times( Mat4.translation(1, 1, 0) );
         
         return model_transform;
     }
+	
+	//Draw Function using Texture
     draw_box_text(context, program_state, model_transform, texture) {
 
-        const t = this.t = program_state.animation_time / 1000
-
-        if(this.outline)
-        {
-           this.shapes.outline.draw(context, program_state, model_transform, this.white, "LINES");
-        }
-        else
-        {
-            this.shapes.cube.draw(context, program_state, model_transform, texture);
-        }
-        
-        
+        const t = this.t = program_state.animation_time / 1000;
+        this.shapes.cube.draw(context, program_state, model_transform, texture);
         return model_transform;
     }
+	
+	//Draw Game Scene
     draw_room(context, program_state, model_transform) {
+		
+		//Start State
         if (!this.start){
 
              
@@ -302,319 +269,277 @@ export class Assignment2 extends Base_Scene {
 
             }
         }
-
+		
+		//Win State
         if (this.win){
 
              
             program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 2.2], [0, 0, 0], [0, 1, 0])));
-            //program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
-            
-            let col1 = hex_color("#ff0000");
+           
             let model_transformS = Mat4.identity().times(Mat4.translation(0,-0.1,0));
             
             model_transformS = this.draw_box_text(context, program_state, model_transformS, this.wrap.b);
             if (this.begin)
             {
-                        //this.start = true;
                        program_state.set_camera(Mat4.translation(0, -10, -47));
 
             }
         }
 
+		//Lose State
         else if (this.lose){
 
             
             program_state.set_camera(Mat4.look_at(...Vector.cast([0, 0, 2.2], [0, 0, 0], [0, 1, 0])));
-            //program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
             
-            let col1 = hex_color("#ff0000");
+            
             let model_transformS = Mat4.identity().times(Mat4.translation(0,-0.1,0));
             
             model_transformS = this.draw_box_text(context, program_state, model_transformS, this.wrap.a);
             if (this.begin)  
             {
-                        //this.start = true;
                         program_state.set_camera(Mat4.translation(0, -10, -47));
 
             }
         }
-
-       else if (this.playing)
-       {
-        if (this.begin)
-            {
-                        //this.start = true;
-                       program_state.set_camera(Mat4.translation(0, -10, -47));
-                       this.begin = false;
-
-            }
-        const t = this.t = program_state.animation_time / 1000
-
-        let col1 = hex_color("#ff0000");
-        let col2 = hex_color("#ffffff");
-        let col3 = hex_color("#ffd700");
-        let col4 = hex_color("#ffff00");
-        
-        //Walls and floor
-        
-        model_transform = model_transform.times(Mat4.scale(50,1,50));
-
-        model_transform = this.draw_box_text(context, program_state, model_transform, this.wrap.f);
-
-        let model_transform2 = Mat4.identity();
-
-        model_transform2 = model_transform2.times(Mat4.translation(70,25,0))
-                                        .times(Mat4.scale(20,25,50));
-
-        let wall1 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
-                .emplace(model_transform2,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.walls[0] = wall1;
-        this.walls[0].shape.draw(context, program_state, wall1.drawn_location,wall1.material);
-
-        //model_transform2 = this.draw_box_text(context, program_state, model_transform2, this.wrap.e);
-
-        let model_transform3 = Mat4.identity();
-
-        model_transform3 = model_transform3.times(Mat4.translation(-70,25,0))
-                                        .times(Mat4.scale(20,25,50));
-
-        let wall2 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
-                .emplace(model_transform3,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.walls[1] = wall2;
-        this.walls[1].shape.draw(context, program_state, wall2.drawn_location,wall2.material);
-
-        //model_transform3 = this.draw_box_text(context, program_state, model_transform3, this.wrap.e);
-
-        let model_transform4 = Mat4.identity();
-
-        model_transform4 = model_transform4.times(Mat4.translation(0,25,-70))
-                                        .times(Mat4.scale(50,25,20));
-
-        let wall3 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
-                .emplace(model_transform4,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.walls[2] = wall3;
-        this.walls[2].shape.draw(context, program_state, wall3.drawn_location,wall3.material);
-
-        //model_transform4 = this.draw_box_text(context, program_state, model_transform4, this.wrap.e);
-
-        let model_transform5 = Mat4.identity();
-
-        model_transform5 = model_transform5.times(Mat4.translation(0,25,70))
-                                        .times(Mat4.scale(50,25,20));
-
-        let wall4 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
-                .emplace(model_transform5,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.walls[3] = wall4;
-        this.walls[3].shape.draw(context, program_state, wall4.drawn_location,wall4.material);
-
-        //model_transform5 = this.draw_box_text(context, program_state, model_transform5, this.wrap.e);
-
-
-        //Pedestal and treasure
-        let pedestal = Mat4.identity();
-
-        pedestal = pedestal.times(Mat4.translation(0,5,-45))
-                                        .times(Mat4.scale(1,5,1));
-
-        pedestal = this.draw_box(context, program_state, pedestal, col1);
-
-        let treasure = pedestal.times(Mat4.scale(0.75,0.3,0.75))
-                            .times(Mat4.translation(0,-2.3,0));
-
-        treasure = this.shapes.sphere.draw(context, program_state, treasure, this.materials.plastic.override({color:col3}));
-        
-        let capture_sphere = Mat4.identity();
-
-        capture_sphere = capture_sphere.times(Mat4.translation(0,5,-45))
-                                        .times(Mat4.translation(0,5,0))
-                                        .times(Mat4.scale(7,7,7));
-
-        let cs = new Body(this.shapes.sphere, this.materials.transparent.override({color:[0,0,0,0]}), vec3(1, 1 + Math.random(), 1))
-                .emplace(capture_sphere,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.capture_space = cs;
-        this.capture_space.shape.draw(context, program_state, cs.drawn_location,cs.material);
-
-        //capture_sphere = this.shapes.sphere.draw(context, program_state, capture_sphere, this.materials.transparent.override({color:[0,0,0,0]}));
-
-        //Guards
-        let guard_1 = Mat4.identity();
-
-        guard_1 = guard_1.times(Mat4.translation(45,5,0))
-                        .times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/4) + (1/3)*Math.sin(3*Math.PI*t/4) + (1/5)*Math.sin(5*Math.PI*t/4) + (1/7)*Math.sin(7*Math.PI*t/4))))
-                        .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/4) + (1/3)*Math.cos(3*Math.PI*t/4) + (1/5)*Math.cos(5*Math.PI*t/4) + (1/7)*Math.cos(7*Math.PI*t/4)),0,0))
-                        .times(Mat4.scale(1,5,3));
-
-        
-        let g1 = new Body(this.shapes.cube, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
-                .emplace(guard_1,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.guards[0] = g1;
-        this.guards[0].shape.draw(context, program_state, g1.drawn_location,g1.material);
-
-        //guard_1 = this.draw_box(context, program_state, guard_1, col1);
-
-        let guard_head = guard_1.times(Mat4.translation(0,1.4,0))
-                           .times(Mat4.scale(2.25,0.5,0.75));
-
-        let gh1 = new Body(this.shapes.sphere, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
-                .emplace(guard_head,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.guards[1] = gh1;
-        this.guards[1].shape.draw(context, program_state, gh1.drawn_location,gh1.material);
-        //guard_head = this.shapes.sphere.draw(context, program_state, guard_head, this.materials.plastic.override({color:col1}));
-
-        let guard_light = guard_1.times(Mat4.rotation(-Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(1,0.5,10));
-
-        if (Math.sin(Math.PI*t/4) < 0)
-        {
-            guard_light = guard_1.times(Mat4.rotation(Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(1,0.5,10));
-        }
-
-        let gl1 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
-                .emplace(guard_light,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.guards[2] = gl1;
-        this.guards[2].shape.draw(context, program_state, gl1.drawn_location,gl1.material);
-        //guard_light = this.shapes.cone.draw(context, program_state, guard_light, this.materials.plastic.override({color:col4}));
-
-        let guard_2 = Mat4.identity();
-
-        guard_2 = guard_2.times(Mat4.translation(-45,5,0))
-                        .times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/4) + (1/3)*Math.sin(3*Math.PI*t/4) + (1/5)*Math.sin(5*Math.PI*t/4) + (1/7)*Math.sin(7*Math.PI*t/4))))
-                        .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/4) + (1/3)*Math.cos(3*Math.PI*t/4) + (1/5)*Math.cos(5*Math.PI*t/4) + (1/7)*Math.cos(7*Math.PI*t/4)),0,0))
-                        .times(Mat4.scale(1,5,3));
-
-        
-        let g2 = new Body(this.shapes.cube, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
-                .emplace(guard_2,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.guards[3] = g2;
-        this.guards[3].shape.draw(context, program_state, g2.drawn_location,g2.material);
-        //guard_2 = this.draw_box(context, program_state, guard_2, col1);
-
-        let guard_head2 = guard_2.times(Mat4.translation(0,1.4,0))
-                           .times(Mat4.scale(2.25,0.5,0.75));
-
-        let gh2 = new Body(this.shapes.sphere, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
-                .emplace(guard_head2,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.guards[4] = gh2;
-        this.guards[4].shape.draw(context, program_state, gh2.drawn_location,gh2.material);
-
-        //guard_head2 = this.shapes.sphere.draw(context, program_state, guard_head2, this.materials.plastic.override({color:col1}));
-
-        let guard_light2 = guard_2.times(Mat4.rotation(-Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(1,0.5,10));
-
-        if (Math.sin(Math.PI*t/4) > 0)
-        {
-            guard_light2 = guard_2.times(Mat4.rotation(Math.PI/2,0,1,0))
-                         .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(1,0.5,10));
-        }
-        
-        let gl2 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
-                .emplace(guard_light2,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.guards[5] = gl2;
-        this.guards[5].shape.draw(context, program_state, gl2.drawn_location,gl2.material);
-        //guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
-
-        let player = program_state.camera_transform;
-
-        player = player.times(Mat4.translation(0,-3,0))
-                        .times(Mat4.scale(3,6,4));
-        
-        
-        let pmodel = new Body(this.shapes.sphere, this.materials.transparent.override({color:[0,0,0,0]}), vec3(1, 1 + Math.random(), 1))
-                .emplace(player,
-                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
-
-        this.player = pmodel;
-        this.player.shape.draw(context, program_state, pmodel.drawn_location,pmodel.material);
-
-        //player = this.shapes.sphere.draw(context, program_state, player, this.materials.transparent.override({color:[0,0,0,0]}));
-
-        const collider = this.colliders[this.collider_selection];
-        const collider2 = this.colliders[1];
-        const collider3 = this.colliders[2];
-
-        this.player.inverse = Mat4.inverse(this.player.drawn_location);
-
-        
-
-        for (let b of this.guards) {
-                // Pass the two bodies and the collision shape to check_if_colliding():
-                if (!this.player.check_if_colliding(b, collider2))
-                    continue;
-                // If we get here, we collided, so turn red and zero out the
-                // velocity so they don't inter-penetrate any further.
-
-                this.lose_game();
-            }
-
-        for (let b of this.walls) {
-                // Pass the two bodies and the collision shape to check_if_colliding():
-                if (!this.player.check_if_colliding(b, collider2))
-                    continue;
-                // If we get here, we collided, so turn red and zero out the
-                // velocity so they don't inter-penetrate any further.
-
-                this.lose_game();
-            }
-        for (let b of this.walls) {
-                // Pass the two bodies and the collision shape to check_if_colliding():
-                if (!this.player.check_if_colliding(b, collider3))
-                    continue;
-                // If we get here, we collided, so turn red and zero out the
-                // velocity so they don't inter-penetrate any further.
-
-                this.lose_game();
-            }
-
-
-        
-        if (this.player.check_if_colliding(this.capture_space, collider)){
-                   this.treasure_touch = true;
-               }
-               else{
-                    this.treasure_touch = false;
-       }
-
-       }
+		
+		//Gameplay State
+		else if (this.playing) {
+			if (this.begin)
+				{
+						   program_state.set_camera(Mat4.translation(0, -10, -47));
+						   this.begin = false;
+				}
+				
+			const t = this.t = program_state.animation_time / 1000
+			
+			//Init Colors
+			let col1 = hex_color("#ff0000");
+			let col2 = hex_color("#ffffff");
+			let col3 = hex_color("#ffd700");
+			let col4 = hex_color("#ffff00");
+			
+            
+			
+			/////////////////////////////
+			//Draw Walls and Floor
+			/////////////////////////////
+			
+			//Init
+			let model_transform2 = Mat4.identity();
+			let model_transform3 = Mat4.identity();
+			let model_transform4 = Mat4.identity();
+			let model_transform5 = Mat4.identity();
+			
+			//Set Position Matrix
+			model_transform = model_transform.times(Mat4.scale(50,1,50));
+			model_transform2 = model_transform2.times(Mat4.translation(70,25,0))
+											.times(Mat4.scale(20,25,50));
+			model_transform3 = model_transform3.times(Mat4.translation(-70,25,0))
+											.times(Mat4.scale(20,25,50));
+			model_transform4 = model_transform4.times(Mat4.translation(0,25,-70))
+											.times(Mat4.scale(50,25,20));
+			model_transform5 = model_transform5.times(Mat4.translation(0,25,70))
+											.times(Mat4.scale(50,25,20));
+			
+			//Init Body Objects
+			let wall1 = new Body(this.shapes.cube, this.wrap.e, vec3(2000,2500,5000))
+					.emplace(model_transform2,
+						vec3(0, 0, 0), 0);
+			
+			let wall2 = new Body(this.shapes.cube, this.wrap.e, vec3(2000,2500,5000))
+					.emplace(model_transform3,
+						vec3(0, 0, 0), 0);
+			
+			let wall3 = new Body(this.shapes.cube, this.wrap.e, vec3(5000,2500,2000))
+					.emplace(model_transform4,
+						vec3(0, 0, 0), 0);
+						
+			let wall4 = new Body(this.shapes.cube, this.wrap.e, vec3(5000,2500,2000))
+					.emplace(model_transform5,
+						vec3(0, 0, 0), 0);
+			
+			//Push Objects onto array and draw
+			this.walls[0] = wall1;		
+			this.walls[1] = wall2;	
+			this.walls[2] = wall3;
+			this.walls[3] = wall4;
+			
+			model_transform = this.draw_box_text(context, program_state, model_transform, this.wrap.f);
+			this.walls[0].shape.draw(context, program_state, wall1.drawn_location,wall1.material);
+			this.walls[1].shape.draw(context, program_state, wall2.drawn_location,wall2.material);
+			this.walls[2].shape.draw(context, program_state, wall3.drawn_location,wall3.material);
+			this.walls[3].shape.draw(context, program_state, wall4.drawn_location,wall4.material);
+
+
+			/////////////////////////////
+			//Draw Pedestal and Treasure
+			/////////////////////////////
+			
+			let pedestal = Mat4.identity();
+
+			pedestal = pedestal.times(Mat4.translation(0,5,-45))
+											.times(Mat4.scale(1,5,1));
+
+			pedestal = this.draw_box(context, program_state, pedestal, col1);
+
+			let treasure = pedestal.times(Mat4.scale(0.75,0.3,0.75))
+								.times(Mat4.translation(0,-2.3,0));
+
+			treasure = this.shapes.sphere.draw(context, program_state, treasure, this.materials.plastic.override({color:col3}));
+			
+			let capture_sphere = Mat4.identity();
+
+			capture_sphere = capture_sphere.times(Mat4.translation(0,5,-45))
+											.times(Mat4.translation(0,5,0))
+											.times(Mat4.scale(7,7,7));
+
+			let cs = new Body(this.shapes.sphere, this.materials.transparent.override({color:[0,0,0,0]}), vec3(1, 1 + Math.random(), 1))
+					.emplace(capture_sphere,
+						vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+
+			this.capture_space = cs;
+			this.capture_space.shape.draw(context, program_state, cs.drawn_location,cs.material);
+			
+			/////////////////////////////
+			//Draw Guards
+			/////////////////////////////
+			
+			//Init
+			let guard_1 = Mat4.identity();
+			let guard_2 = Mat4.identity();
+
+			//Set Position Matrix
+			guard_1 = guard_1.times(Mat4.translation(45,5,0))
+							.times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/4) + (1/3)*Math.sin(3*Math.PI*t/4) + (1/5)*Math.sin(5*Math.PI*t/4) + (1/7)*Math.sin(7*Math.PI*t/4))))
+							.times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/4) + (1/3)*Math.cos(3*Math.PI*t/4) + (1/5)*Math.cos(5*Math.PI*t/4) + (1/7)*Math.cos(7*Math.PI*t/4)),0,0))
+							.times(Mat4.scale(1,5,3));
+			let guard_head = guard_1.times(Mat4.translation(0,1.4,0))
+							   .times(Mat4.scale(2.25,0.5,0.75));
+			let guard_light = guard_1.times(Mat4.rotation(-Math.PI/2,0,1,0))
+							 .times(Mat4.translation(1,0,-10))
+							 .times(Mat4.scale(1,0.5,10));
+			
+			
+			guard_2 = guard_2.times(Mat4.translation(-45,5,0))
+							.times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/4) + (1/3)*Math.sin(3*Math.PI*t/4) + (1/5)*Math.sin(5*Math.PI*t/4) + (1/7)*Math.sin(7*Math.PI*t/4))))
+							.times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/4) + (1/3)*Math.cos(3*Math.PI*t/4) + (1/5)*Math.cos(5*Math.PI*t/4) + (1/7)*Math.cos(7*Math.PI*t/4)),0,0))
+							.times(Mat4.scale(1,5,3));
+			let guard_head2 = guard_2.times(Mat4.translation(0,1.4,0))
+							   .times(Mat4.scale(2.25,0.5,0.75));
+			let guard_light2 = guard_2.times(Mat4.rotation(-Math.PI/2,0,1,0))
+							 .times(Mat4.translation(1,0,-10))
+							 .times(Mat4.scale(1,0.5,10));
+
+			//Switch flashlight if Guard turns around
+			if (Math.sin(Math.PI*t/4) < 0)
+			{
+				guard_light = guard_1.times(Mat4.rotation(Math.PI/2,0,1,0))
+							 .times(Mat4.translation(1,0,-10))
+							 .times(Mat4.scale(1,0.5,10));
+			}
+			if (Math.sin(Math.PI*t/4) > 0)
+			{
+				guard_light2 = guard_2.times(Mat4.rotation(Math.PI/2,0,1,0))
+							 .times(Mat4.translation(1,0,-10))
+							 .times(Mat4.scale(1,0.5,10));
+			}
+
+			//Init Body Objects
+			let g1 = new Body(this.shapes.cube, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
+					.emplace(guard_1,
+						vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+			let gl1 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
+					.emplace(guard_light,
+						vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+			let gh1 = new Body(this.shapes.sphere, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
+					.emplace(guard_head,
+						vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());			
+			let g2 = new Body(this.shapes.cube, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
+					.emplace(guard_2,
+						vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+			let gh2 = new Body(this.shapes.sphere, this.materials.plastic.override({color:col1}), vec3(1, 1 + Math.random(), 1))
+					.emplace(guard_head2,
+						vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+			let gl2 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
+					.emplace(guard_light2,
+						vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+			
+			//Add Body Objects to Array and Draw
+			this.guards[0] = g1;
+			this.guards[1] = gh1;
+			this.guards[2] = gl1;
+			this.guards[3] = g2;
+			this.guards[4] = gh2;
+			this.guards[5] = gl2;
+			
+			this.guards[0].shape.draw(context, program_state, g1.drawn_location,g1.material);
+			this.guards[1].shape.draw(context, program_state, gh1.drawn_location,gh1.material);
+			this.guards[2].shape.draw(context, program_state, gl1.drawn_location,gl1.material);
+			this.guards[3].shape.draw(context, program_state, g2.drawn_location,g2.material);
+			this.guards[4].shape.draw(context, program_state, gh2.drawn_location,gh2.material);
+			this.guards[5].shape.draw(context, program_state, gl2.drawn_location,gl2.material);
+			
+
+			
+            /////////////////////////////
+			//Draw Player
+			/////////////////////////////
+			
+			let player = program_state.camera_transform;
+
+			player = player.times(Mat4.translation(0,-3,0))
+							.times(Mat4.scale(3,10,4));
+			
+			
+			let pmodel = new Body(this.shapes.sphere, this.materials.transparent.override({color:[0,0,0,0]}), vec3(1, 1 + Math.random(), 1))
+					.emplace(player,
+						vec3(0, 0, 0), 0);
+
+			this.player = pmodel;
+			this.player.shape.draw(context, program_state, pmodel.drawn_location,pmodel.material);
+
+
+			const collider = this.colliders[this.collider_selection];
+			const collider2 = this.colliders[1];
+			const collider3 = this.colliders[2];
+
+			this.player.inverse = Mat4.inverse(this.player.drawn_location);
+			
+			/////////////////////////////
+			//Collision Detection
+			/////////////////////////////
+			
+			//Lose Conditions: If player collides with Guards or laser walls
+			for (let b of this.guards) {
+					if (!this.player.check_if_colliding(b, collider2))
+						continue;
+					this.lose_game();
+				}
+			for (let b of this.walls) {
+					if (!this.player.check_if_colliding(b, collider2) && !this.player.check_if_colliding(b, collider3))
+						continue;
+					this.lose_game();
+				}
+
+			//Win Condition: If player is near treasure and presses "c" key
+			if (this.player.check_if_colliding(this.capture_space, collider)){
+				this.treasure_touch = true;
+			}
+			else{
+				this.treasure_touch = false;
+			}
+
+		   }
 
         return model_transform;
 
-
-    //}
     }
-
+	
+	
     display(context, program_state) {
         super.display(context, program_state);
-        const blue = hex_color("#1a9ffa");
         let model_transform = Mat4.identity();
-
         model_transform = this.draw_room(context, program_state, model_transform);
     }
 }
