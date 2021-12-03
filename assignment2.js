@@ -144,6 +144,7 @@ class Base_Scene extends Scene {
         this.collider_selection = 0;
         this.guards=[];
         this.player = new Body();
+        this.capture_space = new Body();
         for (let i = 0; i < 8 ; i++)
         {
             this.colorArr[i] = color(Math.random(),Math.random(),Math.random(),1);
@@ -447,7 +448,14 @@ export class Assignment2 extends Base_Scene {
                                         .times(Mat4.translation(0,5,0))
                                         .times(Mat4.scale(7,7,7));
 
-        capture_sphere = this.shapes.sphere.draw(context, program_state, capture_sphere, this.materials.transparent.override({color:[0,0,0,0]}));
+        let cs = new Body(this.shapes.sphere, this.materials.transparent.override({color:[0,0,0,0]}), vec3(1, 1 + Math.random(), 1))
+                .emplace(capture_sphere,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+
+        this.capture_space = cs;
+        this.capture_space.shape.draw(context, program_state, cs.drawn_location,cs.material);
+
+        //capture_sphere = this.shapes.sphere.draw(context, program_state, capture_sphere, this.materials.transparent.override({color:[0,0,0,0]}));
 
         //Guards
         let guard_1 = Mat4.identity();
@@ -574,6 +582,16 @@ export class Assignment2 extends Base_Scene {
 
                 this.lose_game();
             }
+
+
+        
+        if (this.player.check_if_colliding(this.capture_space, collider)){
+                   this.treasure_touch = true;
+               }
+               else{
+                    this.treasure_touch = false;
+       }
+
        }
 
 
@@ -584,20 +602,7 @@ export class Assignment2 extends Base_Scene {
         
 
         
-        //WIN CONDITION - currently set as true but should be when player is touching treasure area
-        if (true){
-            this.treasure_touch = true; 
-        } 
-        else{
-            this.treasure_touch = false;
-        }
-
-        //LOSE CONDITION - set as false but should be when player touches a guard
-        if (false){
-            this.lose = true;
-            this.begin = false;
-            this.playing = false;
-        }
+        
 
         //INSERT WALL COLLISION DETECTION HERE?
 
