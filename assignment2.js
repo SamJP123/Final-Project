@@ -4,45 +4,6 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Texture, Shader
 } = tiny;
 
-class Cube extends Shape {
-    constructor() {
-        super("position", "normal",);
-        // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
-        this.arrays.position = Vector3.cast(
-            [-1, -1, -1], [1, -1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [1, 1, 1], [-1, 1, 1],
-            [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, 1], [1, -1, -1], [1, 1, 1], [1, 1, -1],
-            [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [1, -1, -1], [-1, -1, -1], [1, 1, -1], [-1, 1, -1]);
-        this.arrays.normal = Vector3.cast(
-            [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
-            [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
-            [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1]);
-        // Arrange the vertices into a square shape in texture space too:
-        this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
-            14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
-    }
-}
-
-class Cube_Outline extends Shape {
-    constructor() {
-        super("position", "color");
-        //  TODO (Requirement 5).
-        // When a set of lines is used in graphics, you should think of the list entries as
-        // broken down into pairs; each pair of vertices will be drawn as a line segment.
-        // Note: since the outline is rendered with Basic_shader, you need to redefine the position and color of each vertex
-        this.arrays.position = Vector3.cast(
-           [-1,-1,-1], [-1,1,-1], [-1,-1,-1], [1,-1,-1], [-1,-1,-1],  [-1,-1,1],  [1,1,1],  [-1,1,1],
-           [1,1,1], [1,1,-1], [1,1,1], [1,-1,1], [1,1,-1],  [1,-1,-1],  [-1,1,-1],  [1,1,-1],
-           [-1,-1,1],  [1,-1,1],  [-1,1,1],  [-1,1,-1], [-1,-1,1], [-1,1,1], [1,-1,-1], [1,-1,1]);
-        
-        this.arrays.color.push(
-            [1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],
-            [1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],
-            [1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],
-            [1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1]);
-
-        this.indices = false;
-    }
-}
 
 export class Body {
     // **Body** can store and update the properties of a 3D body that incrementally
@@ -139,10 +100,11 @@ class Base_Scene extends Scene {
         this.colliders = [
             {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5},
             {intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(2), leeway: .3},
-            {intersect_test: Body.intersect_cube, points: new defs.Cube(), leeway: .1}
+            {intersect_test: Body.intersect_cube, points: new defs.Cube(), leeway: 1}
         ];
         this.collider_selection = 0;
         this.guards=[];
+        this.walls=[];
         this.player = new Body();
         this.capture_space = new Body();
         for (let i = 0; i < 8 ; i++)
@@ -153,7 +115,6 @@ class Base_Scene extends Scene {
         this.shapes = {
             'cube': new defs.Cube(),
             box_2: new defs.Cube(),
-            'outline': new Cube_Outline(),
             'sphere': new defs.Subdivision_Sphere(4),
             'cone': new defs.Closed_Cone(3,12),
         };
@@ -402,31 +363,59 @@ export class Assignment2 extends Base_Scene {
 
         let model_transform2 = Mat4.identity();
 
-        model_transform2 = model_transform2.times(Mat4.translation(50,25,0))
-                                        .times(Mat4.scale(1,25,50));
+        model_transform2 = model_transform2.times(Mat4.translation(70,25,0))
+                                        .times(Mat4.scale(20,25,50));
 
-        model_transform2 = this.draw_box_text(context, program_state, model_transform2, this.wrap.e);
+        let wall1 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
+                .emplace(model_transform2,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+
+        this.walls[0] = wall1;
+        this.walls[0].shape.draw(context, program_state, wall1.drawn_location,wall1.material);
+
+        //model_transform2 = this.draw_box_text(context, program_state, model_transform2, this.wrap.e);
 
         let model_transform3 = Mat4.identity();
 
-        model_transform3 = model_transform3.times(Mat4.translation(-50,25,0))
-                                        .times(Mat4.scale(1,25,50));
+        model_transform3 = model_transform3.times(Mat4.translation(-70,25,0))
+                                        .times(Mat4.scale(20,25,50));
 
-        model_transform3 = this.draw_box_text(context, program_state, model_transform3, this.wrap.e);
+        let wall2 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
+                .emplace(model_transform3,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+
+        this.walls[1] = wall2;
+        this.walls[1].shape.draw(context, program_state, wall2.drawn_location,wall2.material);
+
+        //model_transform3 = this.draw_box_text(context, program_state, model_transform3, this.wrap.e);
 
         let model_transform4 = Mat4.identity();
 
-        model_transform4 = model_transform4.times(Mat4.translation(0,25,-50))
-                                        .times(Mat4.scale(50,25,1));
+        model_transform4 = model_transform4.times(Mat4.translation(0,25,-70))
+                                        .times(Mat4.scale(50,25,20));
 
-        model_transform4 = this.draw_box_text(context, program_state, model_transform4, this.wrap.e);
+        let wall3 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
+                .emplace(model_transform4,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+
+        this.walls[2] = wall3;
+        this.walls[2].shape.draw(context, program_state, wall3.drawn_location,wall3.material);
+
+        //model_transform4 = this.draw_box_text(context, program_state, model_transform4, this.wrap.e);
 
         let model_transform5 = Mat4.identity();
 
-        model_transform5 = model_transform5.times(Mat4.translation(0,25,50))
-                                        .times(Mat4.scale(50,25,1));
+        model_transform5 = model_transform5.times(Mat4.translation(0,25,70))
+                                        .times(Mat4.scale(50,25,20));
 
-        model_transform5 = this.draw_box_text(context, program_state, model_transform5, this.wrap.e);
+        let wall4 = new Body(this.shapes.cube, this.wrap.e, vec3(1, 1 + Math.random(), 1))
+                .emplace(model_transform5,
+                    vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
+
+        this.walls[3] = wall4;
+        this.walls[3].shape.draw(context, program_state, wall4.drawn_location,wall4.material);
+
+        //model_transform5 = this.draw_box_text(context, program_state, model_transform5, this.wrap.e);
 
 
         //Pedestal and treasure
@@ -461,8 +450,8 @@ export class Assignment2 extends Base_Scene {
         let guard_1 = Mat4.identity();
 
         guard_1 = guard_1.times(Mat4.translation(45,5,0))
-                        .times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/6) + (1/3)*Math.sin(3*Math.PI*t/6) + (1/5)*Math.sin(5*Math.PI*t/6) + (1/7)*Math.sin(7*Math.PI*t/6))))
-                        .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/6) + (1/3)*Math.cos(3*Math.PI*t/6) + (1/5)*Math.cos(5*Math.PI*t/6) + (1/7)*Math.cos(7*Math.PI*t/6)),0,0))
+                        .times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/4) + (1/3)*Math.sin(3*Math.PI*t/4) + (1/5)*Math.sin(5*Math.PI*t/4) + (1/7)*Math.sin(7*Math.PI*t/4))))
+                        .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/4) + (1/3)*Math.cos(3*Math.PI*t/4) + (1/5)*Math.cos(5*Math.PI*t/4) + (1/7)*Math.cos(7*Math.PI*t/4)),0,0))
                         .times(Mat4.scale(1,5,3));
 
         
@@ -488,13 +477,13 @@ export class Assignment2 extends Base_Scene {
 
         let guard_light = guard_1.times(Mat4.rotation(-Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(0.5,0.5,10));
+                         .times(Mat4.scale(1,0.5,10));
 
-        if (Math.sin(Math.PI*t/6) < 0)
+        if (Math.sin(Math.PI*t/4) < 0)
         {
             guard_light = guard_1.times(Mat4.rotation(Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(0.5,0.5,10));
+                         .times(Mat4.scale(1,0.5,10));
         }
 
         let gl1 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
@@ -508,8 +497,8 @@ export class Assignment2 extends Base_Scene {
         let guard_2 = Mat4.identity();
 
         guard_2 = guard_2.times(Mat4.translation(-45,5,0))
-                        .times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/6) + (1/3)*Math.sin(3*Math.PI*t/6) + (1/5)*Math.sin(5*Math.PI*t/6) + (1/7)*Math.sin(7*Math.PI*t/6))))
-                        .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/6) + (1/3)*Math.cos(3*Math.PI*t/6) + (1/5)*Math.cos(5*Math.PI*t/6) + (1/7)*Math.cos(7*Math.PI*t/6)),0,0))
+                        .times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/4) + (1/3)*Math.sin(3*Math.PI*t/4) + (1/5)*Math.sin(5*Math.PI*t/4) + (1/7)*Math.sin(7*Math.PI*t/4))))
+                        .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/4) + (1/3)*Math.cos(3*Math.PI*t/4) + (1/5)*Math.cos(5*Math.PI*t/4) + (1/7)*Math.cos(7*Math.PI*t/4)),0,0))
                         .times(Mat4.scale(1,5,3));
 
         
@@ -535,13 +524,13 @@ export class Assignment2 extends Base_Scene {
 
         let guard_light2 = guard_2.times(Mat4.rotation(-Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(0.5,0.5,10));
+                         .times(Mat4.scale(1,0.5,10));
 
-        if (Math.sin(Math.PI*t/6) > 0)
+        if (Math.sin(Math.PI*t/4) > 0)
         {
             guard_light2 = guard_2.times(Mat4.rotation(Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,0,-10))
-                         .times(Mat4.scale(0.5,0.5,10));
+                         .times(Mat4.scale(1,0.5,10));
         }
         
         let gl2 = new Body(this.shapes.cone, this.materials.transparent2, vec3(1, 1 + Math.random(), 1))
@@ -568,6 +557,8 @@ export class Assignment2 extends Base_Scene {
         //player = this.shapes.sphere.draw(context, program_state, player, this.materials.transparent.override({color:[0,0,0,0]}));
 
         const collider = this.colliders[this.collider_selection];
+        const collider2 = this.colliders[1];
+        const collider3 = this.colliders[2];
 
         this.player.inverse = Mat4.inverse(this.player.drawn_location);
 
@@ -575,7 +566,26 @@ export class Assignment2 extends Base_Scene {
 
         for (let b of this.guards) {
                 // Pass the two bodies and the collision shape to check_if_colliding():
-                if (!this.player.check_if_colliding(b, collider))
+                if (!this.player.check_if_colliding(b, collider2))
+                    continue;
+                // If we get here, we collided, so turn red and zero out the
+                // velocity so they don't inter-penetrate any further.
+
+                this.lose_game();
+            }
+
+        for (let b of this.walls) {
+                // Pass the two bodies and the collision shape to check_if_colliding():
+                if (!this.player.check_if_colliding(b, collider2))
+                    continue;
+                // If we get here, we collided, so turn red and zero out the
+                // velocity so they don't inter-penetrate any further.
+
+                this.lose_game();
+            }
+        for (let b of this.walls) {
+                // Pass the two bodies and the collision shape to check_if_colliding():
+                if (!this.player.check_if_colliding(b, collider3))
                     continue;
                 // If we get here, we collided, so turn red and zero out the
                 // velocity so they don't inter-penetrate any further.
@@ -593,37 +603,6 @@ export class Assignment2 extends Base_Scene {
        }
 
        }
-
-
-        ///////////////////////////////////
-        //INSERT COLLISION DETECTION HERE
-        ///////////////////////////////////
-
-        
-
-        
-        
-
-        //INSERT WALL COLLISION DETECTION HERE?
-
-
-
-        // this.guards[6] = player;
-
- 
-//         for (let a of this.guards) {
-//             // Cache the inverse of matrix of body "a" to save time.
-
-//             // *** Collision process is here ***
-//             // Loop through all bodies again (call each "b"):
-//             for (let b of this.guards) {
-//                 // Pass the two bodies and the collision shape to check_if_colliding():
-//                 if (!a.check_if_colliding(b, collider))
-//                     continue;
-//                 // If we get here, we collided, so turn red and zero out the
-//                 // velocity so they don't inter-penetrate any further.
-//                 a.material = this.materials.plastic.override({color:[0,0,0,0]});
-//             }
 
         return model_transform;
 
