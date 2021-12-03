@@ -461,8 +461,8 @@ export class Assignment2 extends Base_Scene {
         let guard_1 = Mat4.identity();
 
         guard_1 = guard_1.times(Mat4.translation(45,5,0))
-                        .times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/3) + (1/3)*Math.sin(3*Math.PI*t/3) + (1/5)*Math.sin(5*Math.PI*t/3) + (1/7)*Math.sin(7*Math.PI*t/3))))
-                        .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
+                        .times(Mat4.translation(0,0,-20*(Math.sin(Math.PI*t/6) + (1/3)*Math.sin(3*Math.PI*t/6) + (1/5)*Math.sin(5*Math.PI*t/6) + (1/7)*Math.sin(7*Math.PI*t/6))))
+                        .times(Mat4.translation(-45 + -20*(Math.cos(Math.PI*t/6) + (1/3)*Math.cos(3*Math.PI*t/6) + (1/5)*Math.cos(5*Math.PI*t/6) + (1/7)*Math.cos(7*Math.PI*t/6)),0,0))
                         .times(Mat4.scale(1,5,3));
 
         
@@ -470,7 +470,7 @@ export class Assignment2 extends Base_Scene {
                 .emplace(guard_1,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards.push(g1);
+        this.guards[0] = g1;
         this.guards[0].shape.draw(context, program_state, g1.drawn_location,g1.material);
 
         //guard_1 = this.draw_box(context, program_state, guard_1, col1);
@@ -482,7 +482,7 @@ export class Assignment2 extends Base_Scene {
                 .emplace(guard_head,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards.push(gh1);
+        this.guards[1] = gh1;
         this.guards[1].shape.draw(context, program_state, gh1.drawn_location,gh1.material);
         //guard_head = this.shapes.sphere.draw(context, program_state, guard_head, this.materials.plastic.override({color:col1}));
 
@@ -490,7 +490,7 @@ export class Assignment2 extends Base_Scene {
                          .times(Mat4.translation(1,0,-10))
                          .times(Mat4.scale(0.5,0.5,10));
 
-        if (Math.sin(Math.PI*t/3) < 0)
+        if (Math.sin(Math.PI*t/6) < 0)
         {
             guard_light = guard_1.times(Mat4.rotation(Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,0,-10))
@@ -501,15 +501,15 @@ export class Assignment2 extends Base_Scene {
                 .emplace(guard_light,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards.push(gl1);
+        this.guards[2] = gl1;
         this.guards[2].shape.draw(context, program_state, gl1.drawn_location,gl1.material);
         //guard_light = this.shapes.cone.draw(context, program_state, guard_light, this.materials.plastic.override({color:col4}));
 
         let guard_2 = Mat4.identity();
 
         guard_2 = guard_2.times(Mat4.translation(-45,5,0))
-                        .times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/3) + (1/3)*Math.sin(3*Math.PI*t/3) + (1/5)*Math.sin(5*Math.PI*t/3) + (1/7)*Math.sin(7*Math.PI*t/3))))
-                        .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/3) + (1/3)*Math.cos(3*Math.PI*t/3) + (1/5)*Math.cos(5*Math.PI*t/3) + (1/7)*Math.cos(7*Math.PI*t/3)),0,0))
+                        .times(Mat4.translation(0,0,20*(Math.sin(Math.PI*t/6) + (1/3)*Math.sin(3*Math.PI*t/6) + (1/5)*Math.sin(5*Math.PI*t/6) + (1/7)*Math.sin(7*Math.PI*t/6))))
+                        .times(Mat4.translation(45 + 20*(Math.cos(Math.PI*t/6) + (1/3)*Math.cos(3*Math.PI*t/6) + (1/5)*Math.cos(5*Math.PI*t/6) + (1/7)*Math.cos(7*Math.PI*t/6)),0,0))
                         .times(Mat4.scale(1,5,3));
 
         
@@ -517,7 +517,7 @@ export class Assignment2 extends Base_Scene {
                 .emplace(guard_2,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards.push(g2);
+        this.guards[3] = g2;
         this.guards[3].shape.draw(context, program_state, g2.drawn_location,g2.material);
         //guard_2 = this.draw_box(context, program_state, guard_2, col1);
 
@@ -528,7 +528,7 @@ export class Assignment2 extends Base_Scene {
                 .emplace(guard_head2,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards.push(gh2);
+        this.guards[4] = gh2;
         this.guards[4].shape.draw(context, program_state, gh2.drawn_location,gh2.material);
 
         //guard_head2 = this.shapes.sphere.draw(context, program_state, guard_head2, this.materials.plastic.override({color:col1}));
@@ -537,7 +537,7 @@ export class Assignment2 extends Base_Scene {
                          .times(Mat4.translation(1,0,-10))
                          .times(Mat4.scale(0.5,0.5,10));
 
-        if (Math.sin(Math.PI*t/3) > 0)
+        if (Math.sin(Math.PI*t/6) > 0)
         {
             guard_light2 = guard_2.times(Mat4.rotation(Math.PI/2,0,1,0))
                          .times(Mat4.translation(1,0,-10))
@@ -548,7 +548,7 @@ export class Assignment2 extends Base_Scene {
                 .emplace(guard_light2,
                     vec3(0, -1, 0).randomized(2).normalized().times(3), Math.random());
 
-        this.guards.push(gl2);
+        this.guards[5] = gl2;
         this.guards[5].shape.draw(context, program_state, gl2.drawn_location,gl2.material);
         //guard_light2 = this.shapes.cone.draw(context, program_state, guard_light2, this.materials.plastic.override({color:col4}));
 

@@ -890,11 +890,11 @@ const Movement_Controls = defs.Movement_Controls =
 
             //console.log(temp_position);
 
-            this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = 0.4, undefined, () => this.thrust[2] = 0);
+            this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = 0.8, undefined, () => this.thrust[2] = 0);
             //this.new_line();
-            this.key_triggered_button("Left", ["a"], () => this.thrust[0] = 0.4, undefined, () => this.thrust[0] = 0);
-            this.key_triggered_button("Back", ["s"], () => this.thrust[2] = -0.4, undefined, () => this.thrust[2] = 0);
-            this.key_triggered_button("Right", ["d"], () => this.thrust[0] = -0.4, undefined, () => this.thrust[0] = 0);
+            this.key_triggered_button("Left", ["a"], () => this.thrust[0] = 0.8, undefined, () => this.thrust[0] = 0);
+            this.key_triggered_button("Back", ["s"], () => this.thrust[2] = -0.8, undefined, () => this.thrust[2] = 0);
+            this.key_triggered_button("Right", ["d"], () => this.thrust[0] = -0.8, undefined, () => this.thrust[0] = 0);
             this.new_line();
             //this.key_triggered_button("Down", ["z"], () => this.thrust[1] = 1, undefined, () => this.thrust[1] = 0);
 
@@ -908,8 +908,8 @@ const Movement_Controls = defs.Movement_Controls =
             //this.key_triggered_button("+", ["p"], () =>
                // this.speed_multiplier *= 1.2, undefined, undefined, undefined, speed_controls);
             this.new_line();
-            this.key_triggered_button("Look right", ["."], () => this.roll = 1, undefined, () => this.roll = 0);
-            this.key_triggered_button("Look left", [","], () => this.roll = -1, undefined, () => this.roll = 0);
+            this.key_triggered_button("Look right", ["."], () => this.roll = 2, undefined, () => this.roll = 0);
+            this.key_triggered_button("Look left", [","], () => this.roll = -2, undefined, () => this.roll = 0);
 //             this.new_line();
 //             this.key_triggered_button("(Un)freeze mouse look around", ["f"], () => this.look_around_locked ^= 1, "#8B8885");
 //             this.new_line();
